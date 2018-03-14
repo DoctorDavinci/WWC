@@ -34,24 +34,31 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\KSP_DEV\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\@Dependencies\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BDArmory, Version=1.1.0.26521, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Dependencies\BDArmory.dll</HintPath>
     </Reference>
+    <Reference Include="BDArmory.Core, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\@Dependencies\BDArmory.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="HullBreach, Version=0.1.6.2, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\@Dependencies\HullBreach.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\KSP_DEV\KSP_Data\Managed\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\@Dependencies\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ModuleWWC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VesselAlarms.cs" />
+    <Compile Include="WetWeaponCheck.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
