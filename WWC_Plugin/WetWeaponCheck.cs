@@ -26,9 +26,11 @@ namespace WetWeaponCheck
         private Rect _windowRect;
 
         public string _guiDepth = String.Empty;
-        private bool WWC;
+        private bool vesselAlarms;
         private bool CheckWWC = true;
         private bool HBC = false;
+        private bool vesselAlarmsOn = false;
+        private bool setup = true;
 
         private void Awake()
         {
@@ -45,7 +47,7 @@ namespace WetWeaponCheck
             GameEvents.onHideUI.Add(GameUiDisable);
             GameEvents.onShowUI.Add(GameUiEnable);
             _gameUiToggle = true;
-            _guiDepth = "5";
+            _guiDepth = "";
         }
 
         private void OnGUI()
@@ -54,7 +56,77 @@ namespace WetWeaponCheck
                 _windowRect = GUI.Window(320, _windowRect, GuiWindow, "");
         }
 
-        private void checkDepth()
+        public void Update()
+        {
+            if (setup)
+            {
+                Setup();
+            }
+
+            if (vesselAlarms && !vesselAlarmsOn)
+            {
+                alarmOn();
+            }
+
+            if (!vesselAlarms && vesselAlarmsOn)
+            {
+                alarmOff();
+            }
+        }
+
+        private void alarmOff()
+        {
+            List<ModuleVesselAlarms> alarms = new List<ModuleVesselAlarms>(200);
+            foreach (Part p in FlightGlobals.ActiveVessel.Parts)
+            {
+                alarms.AddRange(p.FindModulesImplementing<ModuleVesselAlarms>());
+            }
+            foreach (ModuleVesselAlarms alarm in alarms)
+            {
+                alarm.vesselAlarms = false;
+                vesselAlarmsOn = false;
+            }
+        }
+
+        private void alarmOn()
+        {
+            List<ModuleVesselAlarms> alarms = new List<ModuleVesselAlarms>(200);
+            foreach (Part p in FlightGlobals.ActiveVessel.Parts)
+            {
+                alarms.AddRange(p.FindModulesImplementing<ModuleVesselAlarms>());
+            }
+            foreach (ModuleVesselAlarms alarm in alarms)
+            {
+                alarm.vesselAlarms = true;
+                vesselAlarmsOn = true;
+            }
+        }
+
+        private void Setup()
+        {
+            setup = false;
+
+            List<ModuleVesselAlarms> alarms = new List<ModuleVesselAlarms>(200);
+            foreach (Part p in FlightGlobals.ActiveVessel.Parts)
+            {
+                alarms.AddRange(p.FindModulesImplementing<ModuleVesselAlarms>());
+            }
+            foreach (ModuleVesselAlarms alarm in alarms)
+            {
+                if (alarm.vesselAlarms)
+                {
+                    vesselAlarmsOn = true;
+                    vesselAlarms = true;
+                }
+                else
+                {
+                    vesselAlarmsOn = false;
+                    vesselAlarms = false;
+                }
+            }
+        }
+
+        private void setDepth()
         {
             var guiDepth = float.Parse(_guiDepth);
 
@@ -67,12 +139,12 @@ namespace WetWeaponCheck
             {
                 if (guiDepth >= 0)
                 {
-                    wwcPart.CutoffDepth = guiDepth * (-1);
+                    wwcPart.CutOffDepth = guiDepth * (-1);
 
                 }
                 else
                 {
-                    wwcPart.CutoffDepth = guiDepth;
+                    wwcPart.CutOffDepth = guiDepth;
                 }
             }
         }
@@ -93,8 +165,9 @@ namespace WetWeaponCheck
             DrawDepth(line);
             line++;
             SendDepth(line);
-//            line++;
-//            setWWC(line);
+            line++;
+            line++;
+            VesselAlarms(line);
 
             _windowHeight = ContentTop + line * entryHeight + entryHeight + entryHeight;
             _windowRect.height = _windowHeight;
@@ -155,7 +228,7 @@ namespace WetWeaponCheck
             var saveRect = new Rect(LeftIndent * 1.5f, ContentTop + line * entryHeight, contentWidth * 0.9f, entryHeight);
             if (GUI.Button(saveRect, "Update Depth"))
             {
-                checkDepth();
+                setDepth();
             }
         }
 
@@ -191,22 +264,22 @@ namespace WetWeaponCheck
                 "Set Cut-Off Depth", titleStyle);
         }
 
-        private void setWWC(float line)
+        private void VesselAlarms(float line)
         {
             var saveRect = new Rect(LeftIndent * 1.5f, ContentTop + line * entryHeight, contentWidth * 0.9f, entryHeight);
 
-            if (WWC)
+            if (vesselAlarms)
             {
-                if (GUI.Button(saveRect, "WWC   [On]"))
+                if (GUI.Button(saveRect, "Alarms  [On]"))
                 {
-                    WWC = false;
+                    vesselAlarms = false;
                 }
             }
             else
             {
-                if (GUI.Button(saveRect, "WWC  [Off]"))
+                if (GUI.Button(saveRect, "Alarms [Off]"))
                 {
-                    WWC = true;
+                    vesselAlarms = true;
                 }
             }
         }

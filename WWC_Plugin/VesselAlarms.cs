@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using HullBreach;
+using System.Collections;
 
 
 namespace WetWeaponCheck
@@ -14,23 +15,26 @@ namespace WetWeaponCheck
         private bool targetedAlert = false;
         private bool breachAlert = false;
         private bool criticalAlert = false;
+        private bool pauseRoutine = false;
+        private bool hbPause = false;
 
         private AudioSource soundBreach;
         private AudioSource soundCritical;
         private AudioSource soundTargeted;
 
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiActive = true, guiName = "Vessel Alarms"),
+         UI_Toggle(controlEnabled = false, scene = UI_Scene.All, disabledText = "Off", enabledText = "On")]
         public bool vesselAlarms = true;
 
-        private ModuleHullBreach HullBreach;
-        private ModuleHullBreach HBControl()
+        private MissileFire wmPart;
+        private MissileFire wmCheck()
         {
-            ModuleHullBreach hbControl = null;
+            MissileFire _wmPart = null;
 
-            hbControl = part.FindModuleImplementing<ModuleHullBreach>();
+            _wmPart = part.FindModuleImplementing<MissileFire>();
 
-            return hbControl;
+            return _wmPart;
         }
-
 
         public override void OnStart(StartState state)
         {
@@ -48,8 +52,15 @@ namespace WetWeaponCheck
             {
                 if (vesselAlarms)
                 {
-                    UnderFirecheck();
-                    HullBreachCheck();
+                    if (!hbPause)
+                    {
+                        HullBreachCheck();
+                    }
+
+                    if (!pauseRoutine)
+                    {
+                        UnderFirecheck();
+                    }
 
                     if (targeted && !targetedAlert)
                     {
@@ -85,12 +96,26 @@ namespace WetWeaponCheck
             }
         }
 
+        IEnumerator HBPauseRoutine()
+        {
+            hbPause = true;
+            yield return new WaitForSeconds(3);
+            hbPause = false;
+        }
+
+        IEnumerator PauseRoutine()
+        {
+            pauseRoutine = true;
+            yield return new WaitForSeconds(3);
+            pauseRoutine = false;
+        }
+
+
 
         private void ScreenMsg(string msg)
         {
             ScreenMessages.PostScreenMessage(new ScreenMessage(msg, 4, ScreenMessageStyle.UPPER_CENTER));
         }
-
 
         private void UnderFirecheck()
         {
@@ -115,17 +140,25 @@ namespace WetWeaponCheck
 
         private void HullBreachCheck()
         {
-            HullBreach = HBControl();
-
-            if (HullBreach.isHullBreached)
+            List<ModuleHullBreach> hpParts = new List<ModuleHullBreach>(200);
+            foreach (Part p in vessel.Parts)
             {
-                hullBreached = true;
+                hpParts.AddRange(p.FindModulesImplementing<ModuleHullBreach>());
+            }
+            foreach (ModuleHullBreach hpPart in hpParts)
+            {
+                if (hpPart.isHullBreached)
+                {
+                    hullBreached = true;
+                }
+
+                if (hpPart.DamageState == "Critical")
+                {
+                    hullCritical = true;
+                }
             }
 
-            if (HullBreach.DamageState == "Critical")
-            {
-                hullCritical = true;
-            }
+            StartCoroutine(HBPauseRoutine());
         }
 
 
@@ -158,7 +191,6 @@ namespace WetWeaponCheck
             soundTargeted.rolloffMode = AudioRolloffMode.Logarithmic;
             soundTargeted.minDistance = 0.5f;
             soundTargeted.maxDistance = 1f;
-
         }
     }
 }
